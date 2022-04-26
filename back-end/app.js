@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import chalk from "chalk";
 import { appendFile } from "fs";
+import joi from "joi";
+dotenv.config();
 
 const app = express();
 app.use(cors())
@@ -10,6 +12,15 @@ app.use(express.json());
 const participantes =[];//{name: 'João', lastStatus: 12313123} // O conteúdo do lastStatus será explicado nos próximos requisitos
 const mensagens = [];//{from: 'João', to: 'Todos', text: 'oi galera', type: 'message', time: '20:04:37'}
 
+const participante = joi.object({
+    name: joi.string().required()
+  })
+
+const message= joi.object({
+    to: joi.string().required(),
+    text: joi.string().required(),
+    type: joi.string().valid('message', 'private_message'),
+  })
 
 app.post("/participants" , (req , res) => {
    /*  FIXME("VALIDAÇÃO COM A BLIBIOTECA JOI") */
@@ -42,6 +53,8 @@ app.post("/messages" , (req , res) => {
     res.status(422).send("Todos os campos são obrigatórios!"); 
     return;   
  }
+
+
 })
 
 
