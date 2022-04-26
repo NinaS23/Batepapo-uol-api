@@ -12,9 +12,10 @@ const mensagens = [];//{from: 'João', to: 'Todos', text: 'oi galera', type: 'me
 
 
 app.post("/participants" , (req , res) => {
+   /*  FIXME("VALIDAÇÃO COM A BLIBIOTECA JOI") */
  const { name } = req.body
 if(name == ""){
-    res.status(422).send("Todos os campos são obrigatórios!");
+    res.status(422).send("Todos os campos são obrigatórios!"); 
     return;
 }
 if(name === name){
@@ -24,6 +25,24 @@ if(name === name){
 participantes.push(name)
 })
 
+app.get("/psticipants" , (req , res) => {
+    res.send(participantes)
+})
+
+
+app.post("/messages" , (req , res) => {
+ const { to , text , type} = req.body;
+
+
+ if(to == "" || type == ""){
+    res.status(422).send("Todos os campos são obrigatórios!"); 
+    return; 
+ } 
+ if(type !==  "message" ||  type !== "private_message"){
+    res.status(422).send("Todos os campos são obrigatórios!"); 
+    return;   
+ }
+})
 
 
 
