@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import dayjs from 'dayjs';
 import { appendFile } from "fs";
 import joi from "joi";
-import { sendStatus } from "express/lib/response";
+
 dotenv.config();
 
 const app = express();
@@ -49,7 +49,7 @@ app.post("/participants", (req, res) => {
    participantes.push(participanteArray)
 })
 
-''
+
 
 app.get("/participants", (req, res) => {
   /* await */ mongoClient.connect()
@@ -84,7 +84,7 @@ app.post("/messages", (req, res) => {
     to: ValidarTo,
     text: ValidarText,
     type: ValidarType,
-    time:dayjs().format()
+    time:dayjs().format("HH:MM:SS")
 })
 messages.push(messagesArray)
 res.sendStatus(201);
