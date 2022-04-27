@@ -81,9 +81,9 @@ app.post("/messages", (req, res) => {
   }
   messagesArray.insertOne({
     from: participantes.name,
-    to: ValidarTo,
-    text: ValidarText,
-    type: ValidarType,
+    to: to,
+    text: text,
+    type: type,
     time:dayjs().format("HH:MM:SS")
 })
 messages.push(messagesArray)
