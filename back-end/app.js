@@ -79,13 +79,17 @@ app.post("/messages", (req, res) => {
     return res.sendStatus(422);
   }
   messagesArray.insertOne({
+    from: participantes.name,
     to: ValidarTo,
     text: ValidarText,
-    type: ValidarType
+    type: ValidarType,
+    time:dayjs().format()
 })
 messages.push(messagesArray)
 
 })
+
+
 
 
 
