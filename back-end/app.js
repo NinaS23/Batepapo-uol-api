@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import dayjs from 'dayjs';
 import { appendFile } from "fs";
 import joi from "joi";
+import { sendStatus } from "express/lib/response";
 dotenv.config();
 
 const app = express();
@@ -86,7 +87,7 @@ app.post("/messages", (req, res) => {
     time:dayjs().format()
 })
 messages.push(messagesArray)
-
+res.sendStatus(201);
 })
 
 
