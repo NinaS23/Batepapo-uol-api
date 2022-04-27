@@ -12,57 +12,84 @@ const app = express();
 app.use(cors())
 app.use(express.json());
 
-const participantes =[];//{name: 'João', lastStatus: 12313123} // O conteúdo do lastStatus será explicado nos próximos requisitos
-const mensagens = [];//{from: 'João', to: 'Todos', text: 'oi galera', type: 'message', time: '20:04:37'}
 
-const participante = joi.object({
-    name: joi.string().required()
-  })
+const participantes=[];
+const messages = [];
 
-const message= joi.object({
-    to: joi.string().required(),
-    text: joi.string().required(),
-    type: joi.string().valid('message', 'private_message'),
-  })
+let db;
+const mongoClient = new MongoClient("mongodb://localhost:27017");
 
-app.post("/participants" , (req , res) => {
-   /*  FIXME("VALIDAÇÃO COM A BLIBIOTECA JOI") */
- const { name } = req.body
-if(name == ""){
-    res.status(422).send("Todos os campos são obrigatórios!"); 
+const participanteValidar= joi.object({
+  name: joi.string().required()
+})
+
+const messageValidar = joi.object({
+  to: joi.string().required(),
+  text: joi.string().required(),
+  type: joi.string().valid('message', 'private_message'),
+})
+
+app.post("/participants", (req, res) => {
+  /*  FIXME("VALIDAÇÃO COM A BLIBIOTECA JOI") */
+  const participante = req.body.name
+
+  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+  const nomeParticipanteTrue = participanteArray.findOne({ name: participante.name });
+
+  const validar = participanteValidar.validate(participante);
+  if (validar.error) {
+    return res.sendStatus(422)
+  }
+
+  if (nomeParticipanteTrue) {
+    return res.sendStatus(409);
+  }
+   participanteArray.insertOne({ ...participante, lastStatus: Date.now() });
+   participantes.push(participanteArray)
+})
+
+''
+
+app.get("/participants", (req, res) => {
+  /* await */ mongoClient.connect()
+  res.send(participantes)
+})
+
+
+app.post("/messages", (req, res) => {
+  const { to, text, type } = req.body;
+  const from = req.headers.user;
+
+  const ValidarTo = messageValidar.validate(to) 
+  const ValidarText = messageValidar.validate(text) 
+  const ValidarType = messageValidar.validate(type)
+
+  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+
+  if (!ValidarTo) {
+    res.status(422).send("Todos os campos são obrigatórios!");
     return;
-}
-if(name === name){
-    es.status(409).send("Este nome já existe");
+  }
+  if (!ValidarType || !ValidarText) {
+    res.status(422).send("Todos os campos são obrigatórios!");
     return;
-}
-participantes.push(name)
+  }
+  const nomeParticipanteTrue =  participantes.findOne({ name: from })
+  if (!nomeParticipanteTrue) {
+    return res.sendStatus(422);
+  }
+  messagesArray.insertOne({
+    to: ValidarTo,
+    text: ValidarText,
+    type: ValidarType
 })
-
-app.get("/psticipants" , (req , res) => {
-    res.send(participantes)
-})
-
-
-app.post("/messages" , (req , res) => {
- const { to , text , type} = req.body;
-
-
- if(to == "" || type == ""){
-    res.status(422).send("Todos os campos são obrigatórios!"); 
-    return; 
- } 
- if(type !==  "message" ||  type !== "private_message"){
-    res.status(422).send("Todos os campos são obrigatórios!"); 
-    return;   
- }
-
+messages.push(messagesArray)
 
 })
 
 
 
 
-app.listen(5000 , () =>{
-console.log(chalk.yellow("i`m aliveeee"))
+app.listen(5000, () => {
+  console.log(chalk.yellow("i`m aliveeee"))
 })
