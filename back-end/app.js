@@ -153,6 +153,24 @@ app.get("/messages", (req, res) => {
 })
 
 
+app.post( "/status" , (req,res) =>{
+  async function Status()
+  const user = req.headers.user
+  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+  let participanteExiste = await participanteArray.findOne({ name: user });
+  try{
+    if(!participanteExiste){
+      res.sendStatus(404)
+      //tentar atualizar o lastStatus
+      await participanteArray.insertOne({ ...participant, lastStatus: [...Date.now()] });
+    }
+   res.send(200)
+  }catch{
+    res.send(404)
+  }
+})
+
+
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
 })
