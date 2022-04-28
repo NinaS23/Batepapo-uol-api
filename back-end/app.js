@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 import dayjs from 'dayjs';
 import { appendFile } from "fs";
 import joi from "joi";
-
+import { stripHtml } from "string-strip-html";
+import { strict as assert } from "assert";
 
 dotenv.config();
 
@@ -43,7 +44,9 @@ const messageValidar = joi.object({
 app.post('/participants', async (req, res) => {
   async function EnviarParticipante()
   const participant = req.body;
- 
+
+  participant.name = stripHtml(participant.name).result.trim();
+  
   const validation = participanteValidar.validate(participant);
   if (validation.error) {
     return res.sendStatus(422)
@@ -55,7 +58,7 @@ app.post('/participants', async (req, res) => {
 
     const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
     const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
-
+      
     const participanteExiste = await participanteArray.findOne({ name: participant.name });
     if (participanteExiste) {
       return res.sendStatus(409);
@@ -104,6 +107,11 @@ app.post("/messages", (req, res) => {
   const ValidarTo = messageValidar.validate(to) 
   const ValidarText = messageValidar.validate(text) 
   const ValidarType = messageValidar.validate(type)
+  to = stripHtml(to).result.trim();
+  type = stripHtml(type).result.trim();
+  text = stripHtml(text).result.trim();
+  from = stripHtml(from).result.trim();
+  
 
   const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
   const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
@@ -152,7 +160,7 @@ app.get("/messages", (req, res) => {
   PegarMessage();
 })
 
-function expulsarUser() {
+function ExpulsarUser() {
   const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
   const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
   for (let i = 0; i < participanteArray.length; i++) {
@@ -182,10 +190,22 @@ app.post( "/status" , (req,res) =>{
       //tentar atualizar o lastStatus
       await participanteArray.insertOne({ ...participant, lastStatus: [...Date.now()] });
     }
-    setInterval(expulsarUser, 15000)
    res.send(200)
+   setInterval(ExpulsarUser, 15000)
    Status()
   })
+
+
+
+
+ 
+
+
+
+
+
+
+
 
 
 
