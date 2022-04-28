@@ -15,8 +15,7 @@ app.use(cors())
 app.use(express.json());
 
 
-const participantes=[];
-const messages = [];
+
 
 let db = null;
 const mongoClient = new MongoClient(process.env.MONGO_URL);
@@ -55,7 +54,7 @@ app.post('/participants', async (req, res) => {
     await mongoClient.connect()
 
     const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-    const messagesCollection = mongoClient.db("bate-papo-uol").collection("messages");
+    const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
 
     const participanteExiste = await participanteArray.findOne({ name: participant.name });
     if (participanteExiste) {
@@ -64,7 +63,7 @@ app.post('/participants', async (req, res) => {
 
     await participanteArray.insertOne({ ...participant, lastStatus: Date.now() });
 
-    await messagesCollection.insertOne({
+    await messagesArray.insertOne({
       from: participant.name,
       to: 'Todos',
       text: 'entra na sala...',
