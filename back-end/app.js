@@ -8,6 +8,7 @@ import { appendFile } from "fs";
 import joi from "joi";
 import { stripHtml } from "string-strip-html";
 import { strict as assert } from "assert";
+import { defaultMaxListeners } from "events";
 
 dotenv.config();
 
@@ -194,19 +195,6 @@ app.post( "/status" , (req,res) =>{
    setInterval(ExpulsarUser, 15000)
    Status()
   })
-
-
-
-
- 
-
-
-
-
-
-
-
-
 
 
 app.listen(5000, () => {
