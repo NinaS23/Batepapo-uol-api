@@ -138,6 +138,7 @@ app.get("/messages", (req, res) => {
   async function PegarMessage() {
     try {
       const limit = parseInt(req.query.limit)
+      const usuario = req.headers.user;
 
       const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
       const messages = await messagesCollection.find({}).toArray();
@@ -146,7 +147,7 @@ app.get("/messages", (req, res) => {
       }
       res.status(200).send(messages);
     } catch (error) {
-      res.send(404).send("desculpe, mas não conseguimos achar o participante");
+      res.send(404).send("desculpe, mas não conseguimos achar a message");
     }
   }
   PegarMessage();
