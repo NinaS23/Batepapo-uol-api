@@ -54,9 +54,7 @@ app.post('/participants', async (req, res) => {
   }
 
   try {
-    const mongoClient = new MongoClient(process.env.MONGO_URL);
-    await mongoClient.connect()
-
+    
     const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
     const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
       
