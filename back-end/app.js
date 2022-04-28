@@ -134,6 +134,24 @@ app.post("/messages", (req, res) => {
 });
 
 
+app.get("/messages", (req, res) => {
+  async function PegarMessage() {
+    try {
+      const limit = parseInt(req.query.limit)
+
+      const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+      const messages = await messagesCollection.find({}).toArray();
+      if (limit) {
+        //dividir o limit pra ter so as mensagens daqui
+      }
+      res.status(200).send(messages);
+    } catch (error) {
+      res.send(404).send("desculpe, mas não conseguimos achar o participante");
+    }
+  }
+  PegarMessage();
+})
+
 
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
