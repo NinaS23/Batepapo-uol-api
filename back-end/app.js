@@ -23,14 +23,14 @@ let db = null;
 const mongoClient = new MongoClient(process.env.MONGO_URL);
 const promise = mongoClient.connect();
 
-promise.then(() =>{
+promise.then(() => {
   db = mongoClient.db("api_bate_papo_uol");
   console.log("conectou ao banco do bate-papo-uol");
 })
 promise.catch(res => console.log(chalk.red("deu xabu"), res))
 
 
-const participanteValidar= joi.object({
+const participanteValidar = joi.object({
   name: joi.string().required()
 })
 
@@ -47,17 +47,17 @@ app.post('/participants', async (req, res) => {
   const participant = req.body;
 
   participant.name = stripHtml(participant.name).result.trim();
-  
+
   const validation = participanteValidar.validate(participant);
   if (validation.error) {
     return res.sendStatus(422)
   }
 
   try {
-    
-    const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-    const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
-      
+
+    const participanteArray = await mongoClient.db("bate-papo-uol").collection("participants");
+    const messagesArray = await mongoClient.db("bate-papo-uol").collection("messages");
+
     const participanteExiste = await participanteArray.findOne({ name: participant.name });
     if (participanteExiste) {
       return res.sendStatus(409);
@@ -90,7 +90,7 @@ app.get("/participants", (req, res) => {
       let participants = await db.collection("participants").find().toArray();
       res.status(200).send(participants);
     } catch (error) {
-      res.send(404).send("desculpe, mas não conseguimos achar o participante" );
+      res.send(404).send("desculpe, mas não conseguimos achar o participante");
     }
   }
   participanteAchar();
@@ -98,44 +98,50 @@ app.get("/participants", (req, res) => {
 
 
 
-app.post("/messages", (req, res) => {
-  async function EnviarMessage() 
+app.post("/messages", async (req, res) => {
+  function EnviarMessage()
   const { to, text, type } = req.body;
   const from = req.headers.user;
 
-  const ValidarTo = messageValidar.validate(to) 
-  const ValidarText = messageValidar.validate(text) 
+  const ValidarTo = messageValidar.validate(to)
+  const ValidarText = messageValidar.validate(text)
   const ValidarType = messageValidar.validate(type)
   to = stripHtml(to).result.trim();
   type = stripHtml(type).result.trim();
   text = stripHtml(text).result.trim();
   from = stripHtml(from).result.trim();
-  
 
-  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+  try {
+    const participanteArray = await mongoClient.db("bate-papo-uol").collection("participants");
+    const messagesArray = await mongoClient.db("bate-papo-uol").collection("messages");
 
-  if (!ValidarTo) {
-    res.status(422).send("Todos os campos são obrigatórios!");
-    return;
-  }
-  if (!ValidarType || !ValidarText) {
-    res.status(422).send("Todos os campos são obrigatórios!");
-    return;
-  }
-  const nomeParticipanteTrue =  participanteArray.findOne({ name: from })
-  if (!nomeParticipanteTrue) {
-    return res.sendStatus(422);
-  }
+    if (!ValidarTo) {
+      res.status(422).send("Todos os campos são obrigatórios!");
+      return;
+    }
+    if (!ValidarType || !ValidarText) {
+      res.status(422).send("Todos os campos são obrigatórios!");
+      return;
+    }
+    const nomeParticipanteTrue = participanteArray.findOne({ name: from })
+    if (!nomeParticipanteTrue) {
+      return res.sendStatus(422);
+    }
 
-  await db.messagesArray.insertOne({
-    from: participanteArray.name,
-    to: [...to],
-    text: [...text],
-    type: [...type],
-    time:dayjs().format("HH:MM:SS")
-  });
-  res.sendStatus(201);
+    await db.messagesArray.insertOne({
+      from: participanteArray.name,
+      to: [...to],
+      text: [...text],
+      type: [...type],
+      time: dayjs().format("HH:MM:SS")
+    });
+    res.sendStatus(201);
+    mongoClient.close();
+  } catch (e) {
+    console.log("erro no post messages", e)
+    res.send(404);
+    mongoClient.close();
+  }
   EnviarMessage()
 });
 
@@ -144,5 +150,3 @@ app.post("/messages", (req, res) => {
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
 })
-
-
