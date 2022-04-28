@@ -142,60 +142,6 @@ app.post("/messages", (req, res) => {
 });
 
 
-app.get("/messages", (req, res) => {
-  async function PegarMessage() {
-    try {
-      const limit = parseInt(req.query.limit)
-      const usuario = req.headers.user;
-
-      const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
-      const messages = await messagesCollection.find({}).toArray();
-      if (limit) {
-        //dividir o limit pra ter so as mensagens daqui
-      }
-      res.status(200).send(messages);
-    } catch (error) {
-      res.send(404).send("desculpe, mas não conseguimos achar a message");
-    }
-  }
-  PegarMessage();
-})
-
-function ExpulsarUser() {
-  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
-  for (let i = 0; i < participanteArray.length; i++) {
-    if (participanteArray[i].lastStatus === 10000) {
-      messagesArray.insertOne(
-        {
-          from: 'xxx',
-          to: 'Todos',
-          text: 'sai da sala...',
-          type: 'status',
-          time: 'HH:MM:SS'
-        }
-      )
-    }
-
-  }
-}
-
-app.post( "/status" , (req,res) =>{
-  async function Status()
-  const user = req.headers.user
-  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-  let participanteExiste = await participanteArray.findOne({ name: user });
-  
-    if(!participanteExiste){
-      res.sendStatus(404)
-      //tentar atualizar o lastStatus
-      await participanteArray.insertOne({ ...participant, lastStatus: [...Date.now()] });
-    }
-   res.send(200)
-   setInterval(ExpulsarUser, 15000)
-   Status()
-  })
-
 
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
