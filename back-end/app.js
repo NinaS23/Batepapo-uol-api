@@ -152,25 +152,45 @@ app.get("/messages", (req, res) => {
   PegarMessage();
 })
 
+function expulsarUser() {
+  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+  for (let i = 0; i < participanteArray.length; i++) {
+    if (participanteArray[i].lastStatus === 10000) {
+      messagesArray.insertOne(
+        {
+          from: 'xxx',
+          to: 'Todos',
+          text: 'sai da sala...',
+          type: 'status',
+          time: 'HH:MM:SS'
+        }
+      )
+    }
+
+  }
+}
 
 app.post( "/status" , (req,res) =>{
   async function Status()
   const user = req.headers.user
   const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
   let participanteExiste = await participanteArray.findOne({ name: user });
-  try{
+  
     if(!participanteExiste){
       res.sendStatus(404)
       //tentar atualizar o lastStatus
       await participanteArray.insertOne({ ...participant, lastStatus: [...Date.now()] });
     }
+    setInterval(expulsarUser, 15000)
    res.send(200)
-  }catch{
-    res.send(404)
-  }
-})
+   Status()
+  })
+
 
 
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
 })
+
+
