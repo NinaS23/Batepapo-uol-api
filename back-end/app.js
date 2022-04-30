@@ -10,7 +10,6 @@ import { stripHtml } from "string-strip-html";
 import { strict as assert } from "assert";
 import { defaultMaxListeners } from "events";
 import { sendStatus } from "express/lib/response";
-
 dotenv.config();
 
 const app = express();
@@ -44,7 +43,7 @@ const messageValidar = joi.object({
 
 //era pra colocar as mensagens e os posts por isso o post de participants era tão grande ;-;
 app.post('/participants', async (req, res) => {
-  async function EnviarParticipante()
+ 
   const participant = req.body;
 
   participant.name = stripHtml(participant.name).result.trim();
@@ -80,7 +79,7 @@ app.post('/participants', async (req, res) => {
     res.sendStatus(500);
     mongoClient.close();
   }
-  EnviarParticipante()
+
 });
 
 
