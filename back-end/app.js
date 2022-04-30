@@ -132,7 +132,7 @@ app.post('/messages', async (req, res) => {
 
       if (!participants) {
           res.sendStatus(422);
-          console.log("O participante deve já estar cadastrado");
+          console.log("O participante n foi encontrado");
           return;
       }
 
