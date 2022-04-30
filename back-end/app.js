@@ -124,7 +124,8 @@ app.post('/messages', async (req, res) => {
   }
 
   try {
-      const participants = await database.collection("participants").findOne({name: from});
+    const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+      const participants = await participanteArray.findOne({name: from});
 
       if (!participants) {
           res.sendStatus(422);
@@ -210,6 +211,7 @@ setInterval(async () => {
   }
 }, 15000)
 
+
 app.delete("/message/:idMessage" , async (req , res) =>{
   try{
   const from = req.headers.user;
@@ -229,7 +231,45 @@ app.delete("/message/:idMessage" , async (req , res) =>{
     mongoClient.close();
   }
 })
- 
+
+
+ app.put("/message/:idMessage" , async (req , res)=>{
+  const {body} = req;
+  const from = req.header.user;
+  const { idMessage }  = req.params;
+  const message = {
+    from: from,
+    to: body.to,
+    text: body.text,
+    type: body.type,
+    time: dayjs().format('HH:mm:ss')
+};
+try{
+const validarMessage = messageValidar.validate(message);
+if(!validarMessage){
+  res.send(422);
+}
+}catch(error){
+  sendStatus(422).send("xabu" , error)
+}
+
+try{
+const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+const VerificarMessage =  messagesArray.find({_id: new ObjectId(idMessage)})
+if(!VerificarMessage){
+  res.sendStatus(404)
+  return;
+}
+const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+const participants = await participanteArray.findOne({name: from});
+if(participants){
+  res.sendStatus(401)
+  return;
+}
+}catch(error){
+sendStatus(422).send("xabu" , error)
+}
+ })
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
 })
