@@ -116,12 +116,15 @@ app.post('/messages', async (req, res) => {
   };
   message = stripHtml(message).result.trim();
 
-  try {
-      await messageValidar.validateAsync(message, { abortEarly: false});
-  } catch(e) {
-      res.status(422).send("formato errado");
-      return;
-  }
+  try{
+    const validarMessage = messageValidar.validate(message);
+    if(!validarMessage){
+      res.send(422);
+    }
+    }catch(error){
+      sendStatus(422).send("xabu" , error)
+    }
+    
 
   try {
     const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
