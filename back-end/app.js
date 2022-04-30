@@ -9,6 +9,7 @@ import joi from "joi";
 import { stripHtml } from "string-strip-html";
 import { strict as assert } from "assert";
 import { defaultMaxListeners } from "events";
+import { sendStatus } from "express/lib/response";
 
 dotenv.config();
 
@@ -55,8 +56,8 @@ app.post('/participants', async (req, res) => {
 
   try {
 
-    const participanteArray = await mongoClient.db("bate-papo-uol").collection("participants");
-    const messagesArray = await mongoClient.db("bate-papo-uol").collection("messages");
+    const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+    const messagesArray =  mongoClient.db("bate-papo-uol").collection("messages");
 
     const participanteExiste = await participanteArray.findOne({ name: participant.name });
     if (participanteExiste) {
@@ -102,70 +103,59 @@ app.get("/participants", (req, res) => {
 
 
 
-app.post("/messages", async (req, res) => {
-  function EnviarMessage()
-  const { to, text, type } = req.body;
-  const from = req.headers.user;
-
-  const ValidarTo = messageValidar.validate(to)
-  const ValidarText = messageValidar.validate(text)
-  const ValidarType = messageValidar.validate(type)
-  to = stripHtml(to).result.trim();
-  type = stripHtml(type).result.trim();
-  text = stripHtml(text).result.trim();
-  from = stripHtml(from).result.trim();
+app.post('/messages', async (req, res) => {
+  const {body} = req;
+  const from = req.header.user;
+  
+  const message = {
+      from: from,
+      to: body.to,
+      text: body.text,
+      type: body.type,
+      time: dayjs().format('HH:mm:ss')
+  };
 
   try {
-    const participanteArray = await mongoClient.db("bate-papo-uol").collection("participants");
-    const messagesArray = await mongoClient.db("bate-papo-uol").collection("messages");
-
-    if (!ValidarTo) {
-      res.status(422).send("Todos os campos são obrigatórios!");
+      await messageValidar.validateAsync(message, { abortEarly: false});
+  } catch(e) {
+      res.status(422).send("formato errado");
       return;
-    }
-    if (!ValidarType || !ValidarText) {
-      res.status(422).send("Todos os campos são obrigatórios!");
-      return;
-    }
-    const nomeParticipanteTrue = participanteArray.findOne({ name: from })
-    if (!nomeParticipanteTrue) {
-      return res.sendStatus(422);
-    }
-
-    await db.messagesArray.insertOne({
-      from: participanteArray.name,
-      to: [...to],
-      text: [...text],
-      type: [...type],
-      time: dayjs().format("HH:MM:SS")
-    });
-    res.sendStatus(201);
-    mongoClient.close();
-  } catch (e) {
-    console.log("erro no post messages", e)
-    res.send(404);
-    mongoClient.close();
   }
-  EnviarMessage()
+
+  try {
+      const participants = await database.collection("participants").findOne({name: from});
+
+      if (!participants) {
+          res.sendStatus(422);
+          console.log("O participante deve já estar cadastrado");
+          return;
+      }
+
+      await db.collection("messages").insertOne(message);
+      res.sendStatus(201);
+  } catch(e) {
+      console.log("Deu xabu", e);
+      res.status(422).send(e);
+  }
 });
+
 
 app.get("/messages", async (req, res) => {
 
   async function PegarMessages() {
     try {
+     const from = req.headers.user;
       const { limit } = req.query;
       let messages = await db.collection("messages").find().toArray();
       if (limit) {
         //dividir o limit pra ter so as mensagens daqui
         res.status(200).send(messages);
         return;
-      
       }
       if(!limit){
         res.status(200).send(messages);
         return;
       }
-
       res.sendStatus(201);
       mongoClient.close();
     } catch (error) {
@@ -175,6 +165,50 @@ app.get("/messages", async (req, res) => {
   }
   PegarMessages();
 });
+
+
+app.post("/status" , async (req , res) =>{
+  try{
+  const from = req.headers.user;
+  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
+  let participanteExiste = await participanteArray.findOne({ name: from });
+  if(!participanteExiste){
+    sendStatus(404).send("não encontramos seu user");
+    return;
+    }
+    await db.collection("participants").updateOne({ name: from },
+      { $set: { lastStatus: Date.now() } });
+  res.sendStatus(200);
+  }catch(e){
+    res.send(404).send("desculpe,não conseguimos achar o seu usuário e atualizar" , e);
+    mongoClient.close();
+  }
+
+})
+
+setInterval(async () => {
+  try{
+  const participanteArray = mongoClient.db("bate-papo-uol").collection("participants")
+  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+  let acharInativo = await participanteArray.find().toArray();
+   const Inatividade = acharInativo.filter(participanteInativo => participanteInativo.lastStatus)
+  if(Inatividade > 10000){
+    messagesArray.insertOne(
+      {
+        from: 'xxx',
+        to: 'Todos',
+        text: 'sai da sala...',
+        type: 'status',
+        time: 'HH:MM:SS'
+      }
+    )
+  }
+  return messagesArray;
+  }catch(err){
+    res.send(404).send(err);
+    mongoClient.close();
+  }
+}, 15000)
 
 
 
