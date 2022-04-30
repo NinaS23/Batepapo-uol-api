@@ -160,7 +160,7 @@ app.get("/messages", async (req, res) => {
       res.sendStatus(201);
       mongoClient.close();
     } catch (error) {
-      res.send(404).send("desculpe, mas não conseguimos achar a mensagem");
+      res.send(422).send("desculpe, mas não conseguimos achar a mensagem");
       mongoClient.close();
     }
 });
@@ -179,7 +179,7 @@ app.post("/status" , async (req , res) =>{
       { $set: { lastStatus: Date.now() } });
   res.sendStatus(200);
   }catch(e){
-    res.send(404).send("desculpe,não conseguimos achar o seu usuário e atualizar" , e);
+    res.send(422).send("desculpe,não conseguimos achar o seu usuário e atualizar" , e);
     mongoClient.close();
   }
 
@@ -192,9 +192,10 @@ setInterval(async () => {
   let acharInativo = await participanteArray.find().toArray();
    const Inatividade = acharInativo.filter(participanteInativo => participanteInativo.lastStatus)
   if(Inatividade > 10000){
+    await database.collection('participants').deleteOne(participanteInativo.name);//n entendi bem essa parte
     messagesArray.insertOne(
       {
-        from: 'xxx',
+        from: participanteInativo.name,
         to: 'Todos',
         text: 'sai da sala...',
         type: 'status',
@@ -204,13 +205,31 @@ setInterval(async () => {
   }
   return messagesArray;
   }catch(err){
-    res.send(404).send(err);
+    res.send(422).send(err);
     mongoClient.close();
   }
 }, 15000)
 
-
-
+app.delete("/message/:idMessage" , async (req , res) =>{
+  try{
+  const from = req.headers.user;
+  const { idMessage }  = req.params;
+  const messagesArray = mongoClient.db("bate-papo-uol").collection("messages");
+  const messageId = messagesArray.find({_id: new ObjectId(idMessage)})
+  if(!messageId){
+    sendStatus(404).send("mensagem inválida")
+    return;
+  }
+  if(from !== messagesArray.from){
+    sendStatus(401).send("usuário não bate com o usuaŕio da mensagem")
+  }
+  await messagesArray.deleteOne({ _id: new ObjectId(idMessage) })
+  }catch(e){
+    res.send(422).send(err);
+    mongoClient.close();
+  }
+})
+ 
 app.listen(5000, () => {
   console.log(chalk.yellow("i`m aliveeee"))
 })
