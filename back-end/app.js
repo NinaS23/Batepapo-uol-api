@@ -73,9 +73,11 @@ app.post('/participants', async (req, res) => {
       time: dayjs().format("HH:mm:ss")
     });
     res.sendStatus(201);
+    mongoClient.close();
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
+    mongoClient.close();
   }
   EnviarParticipante()
 });
@@ -89,8 +91,10 @@ app.get("/participants", (req, res) => {
     try {
       let participants = await db.collection("participants").find().toArray();
       res.status(200).send(participants);
+      mongoClient.close();
     } catch (error) {
       res.send(404).send("desculpe, mas não conseguimos achar o participante");
+      mongoClient.close();
     }
   }
   participanteAchar();
@@ -143,6 +147,33 @@ app.post("/messages", async (req, res) => {
     mongoClient.close();
   }
   EnviarMessage()
+});
+
+app.get("/messages", async (req, res) => {
+
+  async function PegarMessages() {
+    try {
+      const { limit } = req.query;
+      let messages = await db.collection("messages").find().toArray();
+      if (limit) {
+        //dividir o limit pra ter so as mensagens daqui
+        res.status(200).send(messages);
+        return;
+      
+      }
+      if(!limit){
+        res.status(200).send(messages);
+        return;
+      }
+
+      res.sendStatus(201);
+      mongoClient.close();
+    } catch (error) {
+      res.send(404).send("desculpe, mas não conseguimos achar a mensagem");
+      mongoClient.close();
+    }
+  }
+  PegarMessages();
 });
 
 
