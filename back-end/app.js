@@ -87,8 +87,8 @@ app.post('/participants', async (req, res) => {
 
 
 
-app.get("/participants", (req, res) => {
-  async function participanteAchar() {
+app.get("/participants", async (req, res) => {
+   {
     try {
       let participants = await db.collection("participants").find().toArray();
       res.status(200).send(participants);
@@ -98,7 +98,7 @@ app.get("/participants", (req, res) => {
       mongoClient.close();
     }
   }
-  participanteAchar();
+
 });
 
 
@@ -114,6 +114,7 @@ app.post('/messages', async (req, res) => {
       type: body.type,
       time: dayjs().format('HH:mm:ss')
   };
+  message = stripHtml(message).result.trim();
 
   try {
       await messageValidar.validateAsync(message, { abortEarly: false});
@@ -142,7 +143,7 @@ app.post('/messages', async (req, res) => {
 
 app.get("/messages", async (req, res) => {
 
-  async function PegarMessages() {
+ 
     try {
      const from = req.headers.user;
       const { limit } = req.query;
@@ -162,8 +163,6 @@ app.get("/messages", async (req, res) => {
       res.send(404).send("desculpe, mas não conseguimos achar a mensagem");
       mongoClient.close();
     }
-  }
-  PegarMessages();
 });
 
 
