@@ -151,7 +151,7 @@ app.get("/messages", async (req, res) => {
     const inicio = (pagina - 1) * limit;
     const final = pagina * limit;
 
-    const messageFiltradas = [...messages].reverse().slice(inicio, final);
+    const messageFiltradas = [...messages , from].reverse().slice(inicio, final);
     if (limit) {
       res.status(200).send(messageFiltradas);
       return;
