@@ -264,7 +264,7 @@ if(!VerificarMessage){
 }
 const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
 const participants = await participanteArray.findOne({name: from});
-if(participants){
+if(!participants){
   res.sendStatus(401)
   return;
 }
