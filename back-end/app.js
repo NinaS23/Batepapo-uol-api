@@ -38,7 +38,7 @@ const messageValidar = joi.object({
 })
 
 
-//era pra colocar as mensagens e os posts por isso o post de participants era tão grande ;-;
+
 app.post('/participants', async (req, res) => {
  
   const participant = req.body;
@@ -117,52 +117,55 @@ app.post('/messages', async (req, res) => {
     if(!validarMessage){
       res.send(422);
     }
-    }catch(error){
-      sendStatus(422).send("xabu" , error)
-    }
-    
+  } catch (error) {
+    sendStatus(422).send("xabu", error)
+  }
+
 
   try {
     const participanteArray = mongoClient.db("bate-papo-uol").collection("participants");
-      const participants = await participanteArray.findOne({name: from});
+    const participants = await participanteArray.findOne({ name: from });
 
-      if (!participants) {
-          res.sendStatus(422);
-          console.log("O participante n foi encontrado");
-          return;
-      }
+    if (!participants) {
+      res.sendStatus(422);
+      console.log("O participante n foi encontrado");
+      return;
+    }
 
-      await db.collection("messages").insertOne(message);
-      res.sendStatus(201);
-  } catch(e) {
-      console.log("Deu xabu", e);
-      res.status(422).send(e);
+    await db.collection("messages").insertOne(message);
+    res.sendStatus(201);
+  } catch (e) {
+    console.log("Deu xabu", e);
+    res.status(422).send(e);
   }
 });
 
 
 app.get("/messages", async (req, res) => {
 
- 
-    try {
-     const from = req.headers.user;
-      const { limit } = req.query;
-      let messages = await db.collection("messages").find().toArray();
-      if (limit) {
-        //dividir o limit pra ter so as mensagens daqui
-        res.status(200).send(messages);
-        return;
-      }
-      if(!limit){
-        res.status(200).send(messages);
-        return;
-      }
-      res.sendStatus(201);
-      mongoClient.close();
-    } catch (error) {
-      res.send(422).send("desculpe, mas não conseguimos achar a mensagem");
-      mongoClient.close();
+
+  try {
+    const from = req.headers.user;
+    const { limit } = req.query;
+    let messages = await db.collection("messages").find().toArray();
+    const inicio = (pagina - 1) * limit;
+    const final = pagina * limit;
+
+    const messageFiltradas = [...messages].reverse().slice(inicio, final);
+    if (limit) {
+      res.status(200).send(messageFiltradas);
+      return;
     }
+    if (!limit) {
+      res.status(200).send(messages);
+      return;
+    }
+    res.sendStatus(201);
+    mongoClient.close();
+  } catch (error) {
+    res.send(422).send("desculpe, mas não conseguimos achar a mensagem");
+    mongoClient.close();
+  }
 });
 
 
